@@ -137,10 +137,30 @@ async def analyze_text(
     title: str = Form("Untitled"),
     date: str = Form(""),
 ):
-    """Submit text directly for analysis (no file upload needed)."""
+    """Submit text directly for analysis (no file upload needed).
+    Splits single text into sections for section-level spectral analysis."""
     doc = ingest_text(text, title=title, date=date)
-    engine = SpectralEngine(operator="evez666")
-    engine.load_corpus([doc.to_corpus_entry()])
+    
+    # Build corpus from sections of the document itself
+    # This enables eigenforensic detection of internal gaps/redactions
+    sections = text.split('\n\n')
+    sections = [s.strip() for s in sections if len(s.strip()) > 20]
+    
+    if len(sections) >= 2:
+        # Section-level spectral analysis
+        corpus_entries = []
+        for i, sec in enumerate(sections):
+            corpus_entries.append({
+                "id": f"{title}_sec{i}",
+                "text": sec,
+                "title": f"Section {i+1}"
+            })
+        engine = SpectralEngine(operator="evez666")
+        engine.load_corpus(corpus_entries)
+    else:
+        engine = SpectralEngine(operator="evez666")
+        engine.load_corpus([doc.to_corpus_entry()])
+    
     spectral_result = engine.analyze()
 
     # Generate report
