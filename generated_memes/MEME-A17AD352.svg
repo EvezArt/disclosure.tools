@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="500" viewBox="0 0 600 500">
+  <!-- Background -->
+  <rect width="600" height="500" fill="#1a1a2e"/>
+  
+  <!-- Disclosure.tools branding -->
+  <text x="300" y="30" font-family="Courier New, monospace" font-size="10" fill="#666666" text-anchor="middle">disclosure.tools — eigenforensics meme</text>
+  
+  <!-- Top text -->
+  <text x="300" y="120" font-family="Impact, Arial Black, sans-serif" font-size="28px" fill="#ffffff" text-anchor="middle" stroke="#000000" stroke-width="2">
+    <tspan x="300" dy="0">WHEN THE FOIA RELEASE IS</tspan>
+    <tspan x="300" dy="35"></tspan>
+  </text>
+  
+  <!-- Center graphic -->
+  <g transform="translate(300,250)">
+    <!-- Gap visualization -->
+    <circle r="60" fill="none" stroke="#ff4444" stroke-width="3" opacity="0.8"/>
+    <circle r="40" fill="none" stroke="#ff6666" stroke-width="2" opacity="0.6"/>
+    <circle r="20" fill="none" stroke="#ff8888" stroke-width="1" opacity="0.4"/>
+    <line x1="-80" y1="0" x2="80" y2="0" stroke="#ff4444" stroke-width="1" opacity="0.3"/>
+    <line x1="0" y1="-80" x2="0" y2="80" stroke="#ff4444" stroke-width="1" opacity="0.3"/>
+    <text y="5" font-family="Courier New, monospace" font-size="14" fill="#ff4444" text-anchor="middle">GAP</text>
+  </g>
+  
+  <!-- Bottom text -->
+  <text x="300" y="400" font-family="Impact, Arial Black, sans-serif" font-size="24px" fill="#ffffff" text-anchor="middle" stroke="#000000" stroke-width="2">
+    <tspan x="300" dy="0">90% [REDACTED]</tspan>
+    <tspan x="300" dy="32"></tspan>
+  </text>
+  
+  <!-- Footer -->
+  <text x="300" y="470" font-family="Courier New, monospace" font-size="9" fill="#444444" text-anchor="middle">🔬 eigenforensics · η* ≈ 0.03 · disclosure.tools</text>
+  <text x="300" y="485" font-family="Courier New, monospace" font-size="8" fill="#333333" text-anchor="middle">built by EVEZ666</text>
+</svg>

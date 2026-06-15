@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+generated_memes/
+leaderboard_data/
