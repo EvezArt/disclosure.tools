@@ -22,6 +22,8 @@ from gap_detector.graph import build_document_graph, build_corpus_graph
 from gap_detector.report import generate_report, GapReport as GapReportObj
 from meme_factory import generate_meme, auto_generate_memes, get_all_templates, MEME_TEMPLATES
 from leaderboard import Leaderboard
+from integration import evez_integration
+from monitor import foia_monitor
 
 app = FastAPI(
     title="disclosure.tools",
@@ -358,6 +360,104 @@ async def batch_analyze(files: list[UploadFile] = File(...)):
             results.append({"filename": file.filename, "error": str(e)})
 
     return {"results": results, "total_files": len(files)}
+
+
+# ─── EVEZ-OS Integration ───────────────────────────────────
+
+@app.get("/api/v1/integration/services")
+async def get_service_status():
+    """Health-check all EVEZ-OS services."""
+    results = await evez_integration.check_all_services()
+    online = sum(1 for s in results.values() if s["status"] == "online")
+    return {"services": results, "online": online, "total": len(results)}
+
+
+@app.post("/api/v1/integration/cross-analyze")
+async def cross_service_analysis(file: UploadFile = File(...)):
+    """Analyze document + generate cross-service insights from EVEZ-OS."""
+    content = await file.read()
+    filename = file.filename or "upload.json"
+
+    docs = ingest_bytes(content, filename)
+    corpus = [d.to_corpus_entry() for d in docs]
+
+    # Run spectral analysis
+    engine = SpectralEngine(operator="evez666")
+    engine.load_corpus(corpus)
+    spectral_result = engine.analyze()
+
+    # Generate gap report
+    eigenvalues = np.array(spectral_result.get("eigenvalues", []))
+    report = generate_report(
+        eigenvalues=eigenvalues,
+        n_documents=len(docs),
+        n_sections=sum(len(d.sections) for d in docs),
+        operator="evez666",
+        section_titles=[d.title for d in docs],
+        context_text=" ".join(d.text[:200] for d in docs),
+    )
+
+    # Cross-service insights
+    insights = await evez_integration.generate_cross_insights(report.to_dict())
+
+    # Check service health
+    services = await evez_integration.check_all_services()
+
+    return {
+        "spectral": spectral_result,
+        "report": report.to_dict(),
+        "cross_insights": [i.to_dict() for i in insights],
+        "services": services,
+    }
+
+
+@app.get("/api/v1/integration/search-gaps")
+async def search_for_gaps(query: str = Query("aaro_reports")):
+    """Use AI Search to find documents that fill detected gaps."""
+    results = await evez_integration.search_for_gaps(query)
+    return {"query": query, "results": results, "count": len(results)}
+
+
+# ─── FOIA Monitor ─────────────────────────────────────────────
+
+@app.get("/api/v1/monitor/sources")
+def get_monitor_sources():
+    """Get all configured FOIA monitoring sources."""
+    return {"sources": foia_monitor.get_sources()}
+
+
+@app.post("/api/v1/monitor/check")
+async def check_all_sources():
+    """Check all enabled FOIA sources for new content."""
+    results = await foia_monitor.check_all()
+    changes = sum(1 for r in results if r.changes)
+    return {
+        "results": [r.to_dict() for r in results],
+        "sources_checked": len(results),
+        "changes_detected": changes,
+    }
+
+
+@app.post("/api/v1/monitor/check/{source_id}")
+async def check_single_source(source_id: str):
+    """Check a single FOIA source for new content."""
+    result = await foia_monitor.check_source(source_id)
+    if not result:
+        raise HTTPException(status_code=404, detail="Source not found")
+    return result.to_dict()
+
+
+@app.post("/api/v1/monitor/add-source")
+def add_monitor_source(name: str = Query(...), url: str = Query(...)):
+    """Add a new FOIA monitoring source."""
+    source = foia_monitor.add_source(name, url)
+    return source.to_dict()
+
+
+@app.get("/api/v1/monitor/history")
+def get_monitor_history(limit: int = Query(50, ge=1, le=200)):
+    """Get FOIA monitoring check history."""
+    return {"history": foia_monitor.get_history(limit)}
 
 
 if __name__ == "__main__":
